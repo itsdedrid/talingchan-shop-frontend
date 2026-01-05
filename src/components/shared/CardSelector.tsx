@@ -3,7 +3,7 @@
 import React, { useMemo, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { getCards } from "@/services/card";
+import { getCards, CardFilters } from "@/services/card";
 import { Card as CardType } from "@/types/card";
 import CardItem from "@/components/shared/CardItem";
 import { Row, Col, Skeleton, Empty, Spin, Space, Typography, Checkbox, Radio } from "antd";
@@ -12,12 +12,13 @@ const { Text } = Typography;
 
 const LIMIT = 20;
 
-interface CardSelectorProps {
+export interface CardSelectorProps {
   onSelect?: (cards: CardType[]) => void;
   selectedCards?: CardType[];
   multiple?: boolean;
   selectable?: boolean;
   renderCustomActions?: (card: CardType, isSelected: boolean) => React.ReactNode;
+  filters?: CardFilters;
 }
 
 const CardSelector: React.FC<CardSelectorProps> = ({
@@ -26,6 +27,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   multiple = false,
   selectable = true,
   renderCustomActions,
+  filters,
 }) => {
   const { ref, inView } = useInView();
 
@@ -37,8 +39,8 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["cards"],
-    queryFn: ({ pageParam = 1 }) => getCards(pageParam as number, LIMIT),
+    queryKey: ["cards", filters],
+    queryFn: ({ pageParam = 1 }) => getCards(pageParam as number, LIMIT, filters),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === LIMIT ? allPages.length + 1 : undefined;

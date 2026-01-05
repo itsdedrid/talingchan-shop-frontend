@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import CardSelector from "@/components/shared/CardSelector";
-import { Layout, Typography, ConfigProvider } from "antd";
+import CardBrowser from "@/components/shared/CardBrowser";
+import PageHeader from "@/components/shared/PageHeader";
+import { Layout, ConfigProvider } from "antd";
 
-const { Header, Content, Footer } = Layout;
-const { Title, Text } = Typography;
+const { Content } = Layout;
 
 export default function CardsPage() {
   return (
@@ -18,26 +18,13 @@ export default function CardsPage() {
       }}
     >
       <Layout className="min-h-screen bg-white">
-        <Header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center px-4 md:px-8 h-auto py-4">
-          <div className="container mx-auto">
-            <Title level={2} className="!mb-0 tracking-tight">
-              Collection
-            </Title>
-            <Text type="secondary" className="text-sm">
-              Browse and explore the full card collection
-            </Text>
-          </div>
-        </Header>
+        <PageHeader title="คลัง" />
 
-        <Content className="container mx-auto px-4 py-8">
-          <CardSelector selectable={false} />
-        </Content>
-
-        <Footer className="text-center bg-white border-t border-gray-100 py-12">
-          <Text type="secondary" className="text-xs">
-            Talingchan Collection &copy; {new Date().getFullYear()}
-          </Text>
-        </Footer>
+        <Layout className="container mx-auto">
+          <Content className="p-4 md:p-8">
+            <CardBrowser selectable={false} />
+          </Content>
+        </Layout>
       </Layout>
     </ConfigProvider>
   );

@@ -3,19 +3,31 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
-import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton } from "antd";
-import { PlusOutlined, ShoppingOutlined } from "@ant-design/icons";
+import PageHeader from "@/components/shared/PageHeader";
+import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col } from "antd";
+import { PlusOutlined, ShoppingOutlined, EyeOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import Image from "next/image";
 import { ProductList } from "@/types/product";
 
-const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Content } = Layout;
+const { Text, Title } = Typography;
 
 export default function ProductsPage() {
   const { data: products = [], isLoading, isError } = useQuery({
     queryKey: ["products"],
     queryFn: getProducts,
   });
+
+  const [selectedProduct, setSelectedProduct] = React.useState<ProductList | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+  const getCardImageUrl = (imageName: string | null | undefined) => {
+    return imageName
+      ? `${API_URL}/uploads/cards/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
+      : "/images/card-placeholder.png";
+  };
 
   const columns = [
     {
@@ -30,6 +42,16 @@ export default function ProductsPage() {
       ),
     },
     {
+      title: "Price",
+      key: "price",
+      render: (_: any, record: ProductList) => {
+        const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
+        return activePrice ? (
+          <Text strong>฿{Number(activePrice.price).toLocaleString()}</Text>
+        ) : <Text type="secondary">-</Text>;
+      },
+    },
+    {
       title: "Type",
       dataIndex: "type",
       key: "type",
@@ -38,16 +60,43 @@ export default function ProductsPage() {
     {
       title: "Cards",
       key: "cards",
-      render: (_: any, record: ProductList) => (
-        <div className="space-y-1">
-          {record.product_card?.map(pc => (
-            <div key={pc.product_card_id} className="text-sm">
-              <Text>{pc.cards?.name || `Card #${pc.card_id}`}</Text>
-              <Text type="secondary" className="ml-2">x{pc.quantity}</Text>
-            </div>
-          ))}
-        </div>
-      ),
+      render: (_: any, record: ProductList) => {
+        const displayText = record.product_card?.slice(0, 5);
+        const remaining = (record.product_card?.length || 0) - 5;
+        
+        return (
+          <div className="space-y-1">
+            {displayText?.map(pc => (
+              <div key={pc.product_card_id} className="text-sm">
+                <Text>{pc.cards?.name || `Card #${pc.card_id}`}</Text>
+                {pc.cards?.rare && <Tag className="ml-2 mr-0" color="gold">{pc.cards.rare}</Tag>}
+                <Text type="secondary" className="ml-2">x{pc.quantity}</Text>
+              </div>
+            ))}
+            {remaining > 0 && (
+              <Text type="secondary" className="text-xs block pt-1">
+                + {remaining} more cards...
+              </Text>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Active Until",
+      dataIndex: "ended_at",
+      key: "ended_at",
+      render: (date: string) => date ? new Date(date).toLocaleString() : <Text type="secondary">Indefinite</Text>,
+    },
+    {
+      title: "Price Valid Until",
+      key: "price_valid_until",
+      render: (_: any, record: ProductList) => {
+        const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
+        return activePrice?.price_period_ended ? (
+          <Text>{new Date(activePrice.price_period_ended).toLocaleString()}</Text>
+        ) : <Text type="secondary">-</Text>;
+      },
     },
     {
       title: "Status",
@@ -61,26 +110,34 @@ export default function ProductsPage() {
       title: "Actions",
       key: "actions",
       render: (_: any, record: ProductList) => (
-        <Button size="small">Manage</Button>
+        <Button 
+          icon={<EyeOutlined />} 
+          onClick={() => {
+            setSelectedProduct(record);
+            setIsModalOpen(true);
+          }}
+        >
+          View
+        </Button>
       ),
     },
   ];
 
   return (
     <Layout className="min-h-screen bg-white">
-      <Header className="bg-white border-b border-gray-100 flex items-center justify-between px-8 h-20">
-        <div>
-          <Title level={2} className="!mb-0">My Products</Title>
-          <Text type="secondary">Manage your card collections and listings</Text>
-        </div>
-        <Link href="/products/add">
-          <Button type="primary" icon={<PlusOutlined />} size="large">
-            Add Product
-          </Button>
-        </Link>
-      </Header>
+      <PageHeader 
+        title="My Products" 
+      />
 
       <Content className="p-8 container mx-auto">
+        <div className="flex justify-end mb-6">
+          <Link href="/products/add">
+            <Button type="primary" icon={<PlusOutlined />} size="large">
+              Add Product
+            </Button>
+          </Link>
+        </div>
+
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 10 }} />
         ) : isError ? (
@@ -110,6 +167,101 @@ export default function ProductsPage() {
             pagination={{ pageSize: 10 }}
           />
         )}
+
+        {/* Product View Modal */}
+        <Modal
+          title={selectedProduct?.name}
+          open={isModalOpen}
+          onCancel={() => setIsModalOpen(false)}
+          footer={null}
+          width={800}
+          destroyOnHidden
+        >
+          {selectedProduct && (
+            <div className="mt-4">
+              <Row gutter={24}>
+                {/* Left Column: Cards List */}
+                <Col span={12} className="border-r border-gray-100">
+                  <Title level={5} className="mb-4">Cards ({selectedProduct.product_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} items)</Title>
+                  <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
+                    {selectedProduct.product_card?.map(pc => (
+                      <div key={pc.product_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
+                        <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                           <Image // Using next/image requires width/height or fill
+                            src={getCardImageUrl(pc.cards?.image_name)}
+                            alt={pc.cards?.name || "Card"}
+                            fill
+                            className="object-contain"
+                            sizes="48px"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Text strong className="block truncate" title={pc.cards?.name}>{pc.cards?.name}</Text>
+                          <div className="flex items-center gap-2 mt-1">
+                            {pc.cards?.rare && <Tag className="m-0 text-[10px]" color="gold">{pc.cards.rare}</Tag>}
+                            <Text type="secondary" className="text-xs">{pc.cards?.type}</Text>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <Tag color="blue">x{pc.quantity}</Tag>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Col>
+
+                {/* Right Column: Product Details */}
+                <Col span={12}>
+                  <Title level={5} className="mb-4">Product Details</Title>
+                  <Space orientation="vertical" size="middle" className="w-full">
+                    <div>
+                      <Text type="secondary" className="block text-xs">Description</Text>
+                      <Text>{selectedProduct.detail || "-"}</Text>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                       <Space orientation="vertical" className="w-full">
+                         <div className="flex justify-between items-center">
+                            <Text type="secondary">Price</Text>
+                            {(() => {
+                                const activePrice = selectedProduct.price_period?.find(p => p.status === "active") || selectedProduct.price_period?.[0];
+                                return activePrice ? (
+                                  <Text strong className="text-lg text-blue-600">฿{Number(activePrice.price).toLocaleString()}</Text>
+                                ) : <Text>-</Text>;
+                            })()}
+                         </div>
+                         <div className="flex justify-between items-center">
+                            <Text type="secondary">Product Type</Text>
+                            <Tag color="blue">{selectedProduct.type?.name || "N/A"}</Tag>
+                         </div>
+                         <div className="flex justify-between items-center">
+                            <Text type="secondary">Status</Text>
+                            <Tag color={selectedProduct.status === "active" ? "green" : "orange"}>{selectedProduct.status?.toUpperCase()}</Tag>
+                         </div>
+                       </Space>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                       <div>
+                          <Text type="secondary" className="block text-xs">Active Until</Text>
+                          <Text>{selectedProduct.ended_at ? new Date(selectedProduct.ended_at).toLocaleString() : "Indefinite"}</Text>
+                       </div>
+                       <div>
+                          <Text type="secondary" className="block text-xs">Price Valid Until</Text>
+                          {(() => {
+                              const activePrice = selectedProduct.price_period?.find(p => p.status === "active") || selectedProduct.price_period?.[0];
+                              return activePrice?.price_period_ended ? (
+                                <Text>{new Date(activePrice.price_period_ended).toLocaleString()}</Text>
+                              ) : <Text type="secondary">Indefinite (or until changed)</Text>;
+                          })()}
+                       </div>
+                    </div>
+                  </Space>
+                </Col>
+              </Row>
+            </div>
+          )}
+        </Modal>
       </Content>
     </Layout>
   );

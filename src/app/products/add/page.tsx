@@ -6,9 +6,10 @@ import { getTypes } from "@/services/type";
 import { createProduct, CreateProductInput } from "@/services/product";
 import { Card as CardType } from "@/types/card";
 import CardSelector from "@/components/shared/CardSelector";
+import CardBrowser from "@/components/shared/CardBrowser";
 import { 
   Layout, Typography, Button, Steps, Card, Row, Col, 
-  Form, Input, InputNumber, DatePicker, message, Space, Result, Divider, Tag 
+  Form, Input, InputNumber, DatePicker, App, Space, Result, Divider, Tag 
 } from "antd";
 import { 
   ArrowLeftOutlined, ArrowRightOutlined, CheckOutlined, 
@@ -22,6 +23,7 @@ const { Title, Text, Paragraph } = Typography;
 
 export default function AddProductPage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedType, setSelectedType] = useState<any>(null);
@@ -181,11 +183,11 @@ export default function AddProductPage() {
             <Tag color="blue">{selectedCards.length} Cards Selected</Tag>
           </div>
           <div className="p-6">
-            <CardSelector 
+            <CardBrowser 
               selectedCards={selectedCards}
               onSelect={setSelectedCards}
               multiple={!isSingle}
-              renderCustomActions={(card, isSelected) => isSelected && (
+              renderCustomActions={(card: CardType, isSelected: boolean) => isSelected && (
                 <div 
                   className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200"
                 >
