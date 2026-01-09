@@ -2,10 +2,25 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
-const archivoBlack = localFont({
-  src: "../../public/Archivo_Black/ArchivoBlack-Regular.ttf",
-  variable: "--font-archivo-black",
-  weight: "400",
+const notoSans = localFont({
+  src: [
+    {
+      path: "../../public/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf",
+      style: "normal",
+    },
+    {
+      path: "../../public/Noto_Sans/NotoSans-Italic-VariableFont_wdth,wght.ttf",
+      style: "italic",
+    },
+  ],
+  display: "swap",
+  variable: "--font-noto-sans",
+});
+
+const notoSansThai = localFont({
+  src: "../../public/Noto_Sans_Thai/NotoSansThai-VariableFont_wdth,wght.ttf",
+  display: "swap",
+  variable: "--font-noto-sans-thai",
 });
 
 export const metadata: Metadata = {
@@ -26,13 +41,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${archivoBlack.variable} antialiased`}>
+      <body
+        className={`${notoSans.variable} ${notoSansThai.variable} antialiased`}
+      >
         <QueryProvider>
           <StyledComponentsRegistry>
             <ConfigProvider
               theme={{
                 token: {
-                  fontFamily: archivoBlack.style.fontFamily,
+                  fontFamily: `var(--font-noto-sans), var(--font-noto-sans-thai), sans-serif`,
                 },
               }}
             >
