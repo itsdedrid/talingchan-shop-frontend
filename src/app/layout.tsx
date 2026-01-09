@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const archivoBlack = localFont({
+  src: "../../public/Archivo_Black/ArchivoBlack-Regular.ttf",
+  variable: "--font-archivo-black",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -20,7 +16,7 @@ export const metadata: Metadata = {
 import StyledComponentsRegistry from "@/lib/antd";
 import QueryProvider from "@/lib/query";
 
-import { App } from "antd";
+import { App, ConfigProvider } from "antd";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 export default function RootLayout({
@@ -30,14 +26,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${archivoBlack.variable} antialiased`}>
         <QueryProvider>
           <StyledComponentsRegistry>
-            <AuthProvider>
-              <App>{children}</App>
-            </AuthProvider>
+            <ConfigProvider
+              theme={{
+                token: {
+                  fontFamily: archivoBlack.style.fontFamily,
+                },
+              }}
+            >
+              <AuthProvider>
+                <App>{children}</App>
+              </AuthProvider>
+            </ConfigProvider>
           </StyledComponentsRegistry>
         </QueryProvider>
       </body>
