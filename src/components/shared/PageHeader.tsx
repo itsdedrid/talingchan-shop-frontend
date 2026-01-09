@@ -63,7 +63,7 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
   }
 
   // Determine selected key based on pathname
-  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
+  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : pathname.startsWith("/market") ? "/market" : "";
 
   const userMenu: MenuProps['items'] = [
     {
