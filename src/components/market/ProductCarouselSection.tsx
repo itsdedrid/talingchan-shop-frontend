@@ -40,10 +40,13 @@ export default function ProductCarouselSection({
                   <Skeleton active paragraph={{ rows: 2 }} className="mt-4" />
                 </Card>
               ))
-            : products.map((product) => (
+            : products.map((product, index) => (
                 <Link
                   href={`/products/${product.product_id}`}
                   key={product.product_id}
+                  className={
+                    index === 0 ? "sticky left-0 z-10 block bg-white" : "block"
+                  }
                 >
                   <Card
                     hoverable

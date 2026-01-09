@@ -51,21 +51,30 @@ export default function MarketPageUI({
           getProductImage={getProductImage}
           getActivePrice={getActivePrice}
         />
+        
         {/* Card Carousel Component */}
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
+          title="Featured Cards"
+          coverImage="/images/market_cover.png"
+
         />
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
+          title="New Arrivals"
+          coverImage="/images/market_cover.png"
         />
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
+          title="Trending Now"
+          coverImage="/images/market_cover.png"
+
         />
         {/* Category Grid Component */}
         <CategoryGridSection />
